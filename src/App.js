@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import React, { useState, useEffect } from "react";
 import "./App.scss";
 import * as $ from "jquery";
+import { GetUrlFromFireBase } from "./firebase";
 
 const AppDragDropDemo = () => {
   const [state, setState] = useState({
@@ -41,18 +42,18 @@ const AppDragDropDemo = () => {
     var data = JSON.parse(ev.dataTransfer.getData("application/json"));
     // ev.target.appendChild(document.getElementById(data[0]));
     //window.alert( ev.clientX + ',' + ev.clientY);
-    
+
     let id = ev.dataTransfer.getData("id");
     let left =
       ev.clientX - data[1] > 0 ? ev.clientX - data[1] + "px" : 0 + "px";
     let top = ev.clientY - data[2] > 0 ? ev.clientY - data[2] + "px" : 0 + "px";
-console.log(left,top)
+    console.log(left, top);
     if (cat == "static") {
-      let updatedTask =   state.category.filter((task) => task.id !== id);
-      
+      let updatedTask = state.category.filter((task) => task.id !== id);
+
       setState((prev) => ({ ...prev, category: updatedTask }));
-      return
-    };
+      return;
+    }
     let draggedTasks = { ...state.category.find((task) => task.id == id) };
     if (draggedTasks.section == cat) {
       let updatedTask = state.category.map((task) => {
@@ -118,26 +119,32 @@ console.log(left,top)
     });
     setrendingCategory(rendingCategory);
   }, [state]);
-
+  const [url, setUrl] = useState("");
+  useEffect(() => {
+    console.log(url);
+  }, [url]);
   return (
-    <div className="container_drag">
-      <div
-        className="static"
-        onDragOver={(e) => onDragOver(e)}
-        onDrop={(e) => {
-          onDrop(e, "static");
-        }}
-      >
-        {rendingCategory.static}
+    <>
+      <GetUrlFromFireBase setUrl={setUrl} />
+      <div className="container_drag">
+        <div
+          className="static"
+          onDragOver={(e) => onDragOver(e)}
+          onDrop={(e) => {
+            onDrop(e, "static");
+          }}
+        >
+          {rendingCategory.static}
+        </div>
+        <div
+          className="droppable"
+          onDragOver={(e) => onDragOver(e)}
+          onDrop={(e) => onDrop(e, "container")}
+        >
+          {rendingCategory.container}
+        </div>
       </div>
-      <div
-        className="droppable"
-        onDragOver={(e) => onDragOver(e)}
-        onDrop={(e) => onDrop(e, "container")}
-      >
-        {rendingCategory.container}
-      </div>
-    </div>
+    </>
   );
 };
 

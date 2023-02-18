@@ -83,16 +83,7 @@ export const GetUrlFromFireBase = ({ setUrl }) => {
             className={"w-0 h-0"}
             onChange={handleChange}
           />
-          <p
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              margin: "0",
-              fontSize: "1rem",
-            }}
-          >
-            {file.name}
-          </p>
+        
         </label>
       </>
     </>

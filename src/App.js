@@ -1,24 +1,146 @@
-import { Input } from "antd";
+import { Input, Card, Button } from "antd";
 import { v4 as uuidv4 } from "uuid";
 import React, { useState, useEffect } from "react";
 import "./App.scss";
 import * as $ from "jquery";
 import { GetUrlFromFireBase } from "./firebase";
+import BWMlogo from "./Assests/bwm.jpeg"
+import html2canvas from "html2canvas";
+import { getApp, getApps, initializeApp } from "firebase/app";
+// import React,{useState,useEffect} from "react";
+import {
+  getStorage,
+  ref,
+  getDownloadURL,
+  uploadBytesResumable,
+} from "firebase/storage";
+const firebaseConfig = {
+  apiKey: "AIzaSyCbn15UJcYvwObm0OryOyXWaqmXrslj4Ec",
+  authDomain: "upload-documents-3f71b.firebaseapp.com",
+  projectId: "upload-documents-3f71b",
+  storageBucket: "upload-documents-3f71b.appspot.com",
+  messagingSenderId: "931839699207",
+  appId: "1:931839699207:web:42b9eb7b27b5e6ae78fda2",
+  measurementId: "G-PWBCJMX6ZH",
+};
 
+const app = getApps.length > 0 ? getApp() : initializeApp(firebaseConfig);
+const storage = getStorage(app);
+const { TextArea } = Input;
+const { Meta } = Card;
+const colorArr = [
+  "#a9acb6",
+  "#e52b50",
+  "#f19cbb",
+  "#ab274f",
+  "#d3212d",
+  "#3b7a57",
+  "#ffbf00",
+  "#ff033e",
+  "#87756e",
+  "#9966cc",
+];
+const stateInitialData = {
+  category: [
+    {
+      value: "Learn Angular",
+      section: "static",
+      id: uuidv4(),
+      type: "input",
+      height: "15",
+      width: "15",
+    },
+    {
+      value: "React",
+      section: "static",
+      id: uuidv4(),
+      type: "image",
+      height: "15",
+      width: "15",
+      url: BWMlogo,
+    },
+  ],
+};
+const rcInitialData = {
+  static: [],
+  container: [],
+};
 const AppDragDropDemo = () => {
-  const [state, setState] = useState({
-    category: [
-      {
-        value: "Learn Angular",
-        section: "static",
-        bgcolor: "yellow",
-        id: uuidv4(),
-      },
-      { value: "React", section: "static", bgcolor: "pink", id: uuidv4() },
-      { value: "Vue", section: "container", bgcolor: "skyblue", id: uuidv4() },
-    ],
-  });
-
+  const [bg, setBg] = useState("#fff");
+  const [url, setUrl] = useState("");
+  const [state, setState] = useState(stateInitialData);
+  const [rendingCategory, setrendingCategory] = useState(rcInitialData);
+  const [cImage, setCImage] = useState("");
+  useEffect(() => {
+    if (url) {
+      const newState = state.category.map((obj) => {
+        if (obj.section == "static" && obj.type == "image") {
+          return {
+            ...obj,
+            url,
+          };
+        }
+        return obj;
+      });
+      setState({ category: newState });
+    }
+  }, [url]);
+  useEffect(() => {
+    let rendingCategory = {
+      static: [],
+      container: [],
+    };
+    state.category.forEach((t) => {
+      if (t.section == "static") {
+        rendingCategory[t.section].push(
+          <div
+            key={t.id}
+            onDragStart={(e) => onDragStart(e, t.id)}
+            draggable
+            className="draggable"
+          >
+            {t.type == "image" ? (
+              <>
+                {" "}
+                <img className="imageUploaded" src={t.url} alt="img" />
+              </>
+            ) : (
+              <TextArea defaultValue={t.value} />
+            )}
+          </div>
+        );
+      } else {
+        rendingCategory[t.section].push(
+          <div
+            key={t.id}
+            onDragStart={(e) => onDragStart(e, t.id)}
+            draggable
+            className="draggable"
+            style={{
+              height: t.height + "rem",
+              width: t.width + "rem",
+              left: t.left,
+              top: t.top,
+              position: "absolute",
+            }}
+          >
+            {t.type == "image" ? (
+              <>
+                {" "}
+                <img className="imageUploaded" src={t.url} alt="img" />
+              </>
+            ) : (
+              <TextArea defaultValue={t.value} />
+            )}
+          </div>
+        );
+      }
+    });
+    setrendingCategory(rendingCategory);
+  }, [state]);
+  useEffect(() => {
+    console.log("cImagecImage", cImage);
+  }, [cImage]);
   const onDragStart = (ev, id) => {
     ev.dataTransfer.setData("id", id);
     ev.dataTransfer.setData(
@@ -32,9 +154,6 @@ const AppDragDropDemo = () => {
   };
 
   const onDragOver = (ev) => {
-    // console.log(ev.clientX);
-    // console.log(ev.clientY);
-
     ev.preventDefault();
   };
 
@@ -48,13 +167,14 @@ const AppDragDropDemo = () => {
       ev.clientX - data[1] > 0 ? ev.clientX - data[1] + "px" : 0 + "px";
     let top = ev.clientY - data[2] > 0 ? ev.clientY - data[2] + "px" : 0 + "px";
     console.log(left, top);
+    let draggedTasks = { ...state.category.find((task) => task.id == id) };
+    if (cat == "static" && draggedTasks.section == cat) return;
     if (cat == "static") {
       let updatedTask = state.category.filter((task) => task.id !== id);
-
       setState((prev) => ({ ...prev, category: updatedTask }));
       return;
     }
-    let draggedTasks = { ...state.category.find((task) => task.id == id) };
+
     if (draggedTasks.section == cat) {
       let updatedTask = state.category.map((task) => {
         if (task.id == id) {
@@ -76,73 +196,176 @@ const AppDragDropDemo = () => {
       setState((prev) => ({ ...prev, category: updatedTask }));
     }
   };
-  const [rendingCategory, setrendingCategory] = useState({
-    static: [],
-    container: [],
-  });
-  useEffect(() => {
-    let rendingCategory = {
-      static: [],
-      container: [],
-    };
-    state.category.forEach((t) => {
-      if (t.section == "static") {
-        rendingCategory[t.section].push(
-          <div
-            key={t.id}
-            onDragStart={(e) => onDragStart(e, t.id)}
-            draggable
-            className="draggable"
-            style={{ backgroundColor: t.bgcolor }}
-          >
-            <Input defaultValue={t.value} />
-          </div>
-        );
-      } else {
-        rendingCategory[t.section].push(
-          <div
-            key={t.id}
-            onDragStart={(e) => onDragStart(e, t.id)}
-            draggable
-            className="draggable"
-            style={{
-              backgroundColor: t.bgcolor,
-              left: t.left,
-              top: t.top,
-              position: "absolute",
-            }}
-          >
-            <Input defaultValue={t.value} />
-          </div>
-        );
+
+  const adjustWidthHeight = (value, id, label) => {
+    const newState = state.category.map((obj) => {
+      if (obj.id == id) {
+        return {
+          ...obj,
+          [label]: value,
+        };
       }
+      return obj;
     });
-    setrendingCategory(rendingCategory);
-  }, [state]);
-  const [url, setUrl] = useState("");
-  useEffect(() => {
-    console.log(url);
-  }, [url]);
+    setState({ category: newState });
+  };
+  const handleChangeUploader = (uploadfile) => {
+    if (uploadfile) {
+      setCImage("");
+      const storageRef = ref(storage, `images/${uploadfile.name}`);
+      const uploadTask = uploadBytesResumable(storageRef, uploadfile);
+
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {},
+        (error) => {},
+        () => {
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            setCImage(downloadURL);
+            console.log("downloadURL", downloadURL);
+          });
+        }
+      );
+    }
+  };
+  function dataURLtoBlob(dataurl) {
+    var arr = dataurl.split(","),
+      mime = arr[0].match(/:(.*?);/)[1],
+      bstr = atob(arr[1]),
+      n = bstr.length,
+      u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
+  }
+
+  const convertToImage = () => {
+    html2canvas(document.getElementById("imageConvertingDiv")).then(function (
+      canvas
+    ) {
+      var jpegUrl = canvas.toDataURL("image/jpeg");
+      var blob = dataURLtoBlob(jpegUrl);
+      handleChangeUploader(blob);
+    });
+  };
+  var loadFile = function(event) { 
+    const src = URL.createObjectURL(event.target.files[0]);
+    setUrl(src)
+};
   return (
     <>
-      <GetUrlFromFireBase setUrl={setUrl} />
+      <div id="harish"></div>
       <div className="container_drag">
-        <div
-          className="static"
-          onDragOver={(e) => onDragOver(e)}
-          onDrop={(e) => {
-            onDrop(e, "static");
-          }}
-        >
-          {rendingCategory.static}
+        <div>
+          <h1>Draggable Items</h1>
+          <div
+            className="static"
+            onDragOver={(e) => onDragOver(e)}
+            onDrop={(e) => {
+              onDrop(e, "static");
+            }}
+          >
+            {rendingCategory.static}
+          </div>
+        
         </div>
-        <div
-          className="droppable"
-          onDragOver={(e) => onDragOver(e)}
-          onDrop={(e) => onDrop(e, "container")}
-        >
-          {rendingCategory.container}
+        <div>
+          <Button onClick={convertToImage}>Save</Button>
+          <div
+            id="imageConvertingDiv"
+            style={{
+              background: bg,
+            }}
+            className="droppable"
+            onDragOver={(e) => onDragOver(e)}
+            onDrop={(e) => onDrop(e, "container")}
+          >
+            {rendingCategory.container}
+          </div>
         </div>
+        <div>
+            <h1> Tools</h1>
+            <div className="centerTheContext">
+              <p>
+                <input
+                  type="file"
+                  accept="image/*"
+                  name="image"
+                  id="file"
+                  onChange={(event)=>{
+                    loadFile(event)
+                  }} 
+                  style={{
+                    display:"none"
+                  }}
+                />
+              </p>
+              <p>
+                <label htmlFor="file"  style={{
+                  cursor:"pointer"
+                }}>
+                  Upload Image
+                </label>
+              </p>
+              <div>
+                {colorArr.map((val) => {
+                  return (
+                    <div
+                      onClick={() => {
+                        setBg(val);
+                      }}
+                      className="colorDiv"
+                      style={{
+                        background: val,
+                      }}
+                    ></div>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="centerTheContext">
+              {state.category
+                .filter(({ section }) => section === "container")
+                .map((obj) => {
+                  console.log(obj);
+                  return (
+                    <>
+                      <div className="cardofHeight">
+                        {obj.type == "image" ? (
+                          <img alt="example" src={obj.url} />
+                        ) : (
+                          "textArea"
+                        )}
+
+                        <div  className="inputWH">
+                          <p> 
+                          w:&nbsp;&nbsp;<Input
+                              type={"number"}
+                              onChange={(e) => {
+                                const { value } = e.target;
+                                adjustWidthHeight(value, obj.id, "width");
+                              }}
+                              value={obj.width}
+                            />
+                          </p>
+                          <p> 
+                          h:&nbsp;&nbsp;<Input
+                              type={"number"}
+                              onChange={(e) => {
+                                const { value } = e.target;
+                                adjustWidthHeight(value, obj.id, "height");
+                              }}
+                              value={obj.height}
+                            />{" "}
+                          </p>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })}
+            </div>
+          </div>
       </div>
     </>
   );

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import "./App.scss";
 import * as $ from "jquery";
 import { GetUrlFromFireBase } from "./firebase";
-import BWMlogo from "./Assests/bwm.jpeg"
+import BWMlogo from "./Assests/bwm.jpeg";
 import html2canvas from "html2canvas";
 import { getApp, getApps, initializeApp } from "firebase/app";
 // import React,{useState,useEffect} from "react";
@@ -14,6 +14,7 @@ import {
   getDownloadURL,
   uploadBytesResumable,
 } from "firebase/storage";
+import { textAlign } from "@mui/system";
 const firebaseConfig = {
   apiKey: "AIzaSyCbn15UJcYvwObm0OryOyXWaqmXrslj4Ec",
   authDomain: "upload-documents-3f71b.firebaseapp.com",
@@ -66,7 +67,7 @@ const rcInitialData = {
   container: [],
 };
 const AppDragDropDemo = () => {
-  const [bg, setBg] = useState("#fff");
+  const [bg, setBg] = useState("red");
   const [url, setUrl] = useState("");
   const [state, setState] = useState(stateInitialData);
   const [rendingCategory, setrendingCategory] = useState(rcInitialData);
@@ -91,6 +92,7 @@ const AppDragDropDemo = () => {
       container: [],
     };
     state.category.forEach((t) => {
+      console.log("tttttttttttttt",t)
       if (t.section == "static") {
         rendingCategory[t.section].push(
           <div
@@ -130,14 +132,29 @@ const AppDragDropDemo = () => {
                 <img className="imageUploaded" src={t.url} alt="img" />
               </>
             ) : (
-              <TextArea defaultValue={t.value} />
+              <div
+              contentEditable
+                style={{
+                  color: bg,
+                  height: t.height + "rem",
+                  width: t.width + "rem",
+                  fontWeight: t.fontWeight,
+                  lineHeight:"2.2rem",
+                  fontSize:t.fontSize+ "rem",
+                  // textAlign: "center",
+                  // display: "flex",
+                  // justifyContent: "center",
+                  // alignItems: "center",
+                }}
+                
+              > {t.value?t.value :""} </div>
             )}
           </div>
         );
       }
     });
     setrendingCategory(rendingCategory);
-  }, [state]);
+  }, [state, bg]);
   useEffect(() => {
     console.log("cImagecImage", cImage);
   }, [cImage]);
@@ -167,9 +184,12 @@ const AppDragDropDemo = () => {
       ev.clientX - data[1] > 0 ? ev.clientX - data[1] + "px" : 0 + "px";
     let top = ev.clientY - data[2] > 0 ? ev.clientY - data[2] + "px" : 0 + "px";
     console.log(left, top);
+
     let draggedTasks = { ...state.category.find((task) => task.id == id) };
+    console.log("updatedTask",draggedTasks,cat)
     if (cat == "static" && draggedTasks.section == cat) return;
     if (cat == "static") {
+
       let updatedTask = state.category.filter((task) => task.id !== id);
       setState((prev) => ({ ...prev, category: updatedTask }));
       return;
@@ -209,6 +229,7 @@ const AppDragDropDemo = () => {
     });
     setState({ category: newState });
   };
+
   const handleChangeUploader = (uploadfile) => {
     if (uploadfile) {
       setCImage("");
@@ -249,10 +270,10 @@ const AppDragDropDemo = () => {
       handleChangeUploader(blob);
     });
   };
-  var loadFile = function(event) { 
+  var loadFile = function (event) {
     const src = URL.createObjectURL(event.target.files[0]);
-    setUrl(src)
-};
+    setUrl(src);
+  };
   return (
     <>
       <div id="harish"></div>
@@ -268,15 +289,11 @@ const AppDragDropDemo = () => {
           >
             {rendingCategory.static}
           </div>
-        
         </div>
         <div>
           <Button onClick={convertToImage}>Save</Button>
           <div
             id="imageConvertingDiv"
-            style={{
-              background: bg,
-            }}
             className="droppable"
             onDragOver={(e) => onDragOver(e)}
             onDrop={(e) => onDrop(e, "container")}
@@ -285,87 +302,117 @@ const AppDragDropDemo = () => {
           </div>
         </div>
         <div>
-            <h1> Tools</h1>
-            <div className="centerTheContext">
-              <p>
-                <input
-                  type="file"
-                  accept="image/*"
-                  name="image"
-                  id="file"
-                  onChange={(event)=>{
-                    loadFile(event)
-                  }} 
-                  style={{
-                    display:"none"
-                  }}
-                />
-              </p>
-              <p>
-                <label htmlFor="file"  style={{
-                  cursor:"pointer"
-                }}>
-                  Upload Image
-                </label>
-              </p>
-              <div>
-                {colorArr.map((val) => {
-                  return (
-                    <div
-                      onClick={() => {
-                        setBg(val);
-                      }}
-                      className="colorDiv"
-                      style={{
-                        background: val,
-                      }}
-                    ></div>
-                  );
-                })}
-              </div>
-            </div>
-            <div className="centerTheContext">
-              {state.category
-                .filter(({ section }) => section === "container")
-                .map((obj) => {
-                  console.log(obj);
-                  return (
-                    <>
-                      <div className="cardofHeight">
-                        {obj.type == "image" ? (
-                          <img alt="example" src={obj.url} />
-                        ) : (
-                          "textArea"
-                        )}
-
-                        <div  className="inputWH">
-                          <p> 
-                          w:&nbsp;&nbsp;<Input
-                              type={"number"}
-                              onChange={(e) => {
-                                const { value } = e.target;
-                                adjustWidthHeight(value, obj.id, "width");
-                              }}
-                              value={obj.width}
-                            />
-                          </p>
-                          <p> 
-                          h:&nbsp;&nbsp;<Input
-                              type={"number"}
-                              onChange={(e) => {
-                                const { value } = e.target;
-                                adjustWidthHeight(value, obj.id, "height");
-                              }}
-                              value={obj.height}
-                            />{" "}
-                          </p>
-                        </div>
-                      </div>
-                    </>
-                  );
-                })}
+          <h1> Tools</h1>
+          <div className="centerTheContext">
+            <p>
+              <input
+                type="file"
+                accept="image/*"
+                name="image"
+                id="file"
+                onChange={(event) => {
+                  loadFile(event);
+                }}
+                style={{
+                  display: "none",
+                }}
+              />
+            </p>
+            <p>
+              <label
+                htmlFor="file"
+                style={{
+                  cursor: "pointer",
+                }}
+              >
+                Upload Image
+              </label>
+            </p>
+            <div>
+              {colorArr.map((val) => {
+                return (
+                  <div
+                    onClick={() => {
+                      setBg(val);
+                    }}
+                    className="colorDiv"
+                    style={{
+                      background: val,
+                    }}
+                  ></div>
+                );
+              })}
             </div>
           </div>
+          <div className="centerTheContext">
+            {state.category
+              .filter(({ section }) => section === "container")
+              .map((obj) => {
+                console.log(obj);
+                return (
+                  <>
+                    <div className="cardofHeight">
+                      {obj.type == "image" ? (
+                        <img alt="example" src={obj.url} />
+                      ) : (
+                        "textArea"
+                      )}
+                      {obj.type != "image" && (
+                        <>
+                          <p>
+                            fw:&nbsp;&nbsp;
+                            <Input
+                              type={"number"}
+                              onChange={(e) => {
+                                const { value } = e.target;
+                                adjustWidthHeight(value, obj.id, "fontWeight");
+                              }}
+                              value={obj.fontWeight}
+                            />
+                          </p>
+                          <p>
+                            fs:&nbsp;&nbsp;
+                            <Input
+                              type={"number"}
+                              onChange={(e) => {
+                                const { value } = e.target;
+                                adjustWidthHeight(value, obj.id, "fontSize");
+                              }}
+                              value={obj.fontSize}
+                            />{" "}
+                          </p>
+                        </>
+                      )}
+                      <div className="inputWH">
+                        <p>
+                          w:&nbsp;&nbsp;
+                          <Input
+                            type={"number"}
+                            onChange={(e) => {
+                              const { value } = e.target;
+                              adjustWidthHeight(value, obj.id, "width");
+                            }}
+                            value={obj.width}
+                          />
+                        </p>
+                        <p>
+                          h:&nbsp;&nbsp;
+                          <Input
+                            type={"number"}
+                            onChange={(e) => {
+                              const { value } = e.target;
+                              adjustWidthHeight(value, obj.id, "height");
+                            }}
+                            value={obj.height}
+                          />{" "}
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                );
+              })}
+          </div>
+        </div>
       </div>
     </>
   );
